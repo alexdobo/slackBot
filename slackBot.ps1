@@ -1,3 +1,6 @@
+
+#a lot of the code that runs the bot has been shamelessly stolen from https://github.com/markwragg/Powershell-SlackBot
+
 $null = @( #define initial variables
     $token = get-content ".\variables\token.txt" #not making that mistake again...
     $tolerance = 5
