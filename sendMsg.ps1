@@ -13,9 +13,9 @@ param(
     $Attachments 
 )
 
-
-$token = get-content ".\variables\token.txt" #not making that mistake again...
-
+$null = @(
+    $token = get-content ".\variables\token.txt" #not making that mistake again...
+)
 
 $message = @{
     id = "ps-bot"

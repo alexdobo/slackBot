@@ -1,0 +1,7 @@
+slack.log
+*.csv
+variables/
+old/
+.vscode/
+licenses/
+evolveLicenseSlackBot.exe

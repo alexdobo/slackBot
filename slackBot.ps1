@@ -1,6 +1,6 @@
 
 #a lot of the code that runs the bot has been shamelessly stolen from https://github.com/markwragg/Powershell-SlackBot
-
+cd "C:\Users\Administrator\Documents\Powershell\SlackBot"
 $null = @( #define initial variables
     $token = get-content ".\variables\token.txt" #not making that mistake again...
     $tolerance = 5
@@ -132,6 +132,8 @@ Try{
                     {($_.type -eq "message") -and (!$_.reply_to)}{
                         if (($_.text.StartsWith("!")) -or ($_.text -match "<@$($RTMSession.self.id)>") -or $_.channel.StartsWith("D")) { 
                             "$(get-date) - Sent to me - $($_.text)"
+                            #send hourglass_flowing_sand reaction
+                            
                             $message = $_.text.Trim("!")
                             $response = .\respondToMessage.ps1 -Message $message -Channel $rtm.channel
                             if ($response){
