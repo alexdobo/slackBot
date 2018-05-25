@@ -13,7 +13,7 @@ $null = @(
 )
 . .\createStuff.ps1
 . .\sendMsg.ps1
-. .\whosOnline.ps1
+#. .\whosOnline.ps1
 
 function Console ($Message) {
     Write-Host "$(get-date) - $Message"  
@@ -185,6 +185,7 @@ switch ($Message){
     }
     {$_ -match "(.+),(.+),(\d+),(\d+),(\d+),(\d+),(\d\.\d+),(\d+),(\d+),(.+)"}{
         Console "Reading CollectCents pulse"
+        $null = @(
         #Site,Loc,Large,Small,Empty Recordings,Date (UNIX),Free Space,Last Col Date,Last Rec Date,BoardStatus
         #is a csv, do analysis
         $splitData = $_ -split ","
@@ -233,8 +234,7 @@ switch ($Message){
         }else{
             $done = $True
         }
-        
-
+        )
     }
     default { 
         Console "No response"
@@ -257,5 +257,4 @@ if ($done){
         channel = $Channel
     }
 }
-
 $return
