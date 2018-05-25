@@ -13,81 +13,9 @@ $null = @( #define initial variables
     $alexChannel = get-content ".\variables\alexChannel.txt"
 )
 
-function Send-SlackMsg{
-    param(
-        # The main body of the message
-        [Parameter(Position=0,Mandatory=$True)]
-        [string]$Text,   
-
-        # Channel the message is going to be sent to
-        [Parameter(Position=1,Mandatory=$True)]
-        [String]
-        $Channel,
-
-        # Any attachments
-        [Parameter(Position=2,Mandatory=$False)]
-        $Attachments 
-    )
-    .\sendMsg.ps1 -Text $Text -Channel $Channel -Attachments $Attachments
-}
-
-function Create-Attachment {
-    param(
-        # A plain-text summary of the attachment
-        [Parameter(Mandatory=$False)]
-        [string]$Fallback,   
-
-        # 'good', 'warning', 'danger', or and hex code e.g. '#439FE0'
-        [Parameter(Mandatory=$False)]
-        [String]
-        $Color,
-
-        # This is optional text that appears above the message attachment block.
-        [Parameter(Mandatory=$False)]
-        [String]
-        $Pretext,
-
-        # Larger, bold text near the top of a message attachment.
-        [Parameter(Mandatory=$True)]
-        [String]
-        $Title,
-
-        # Makes the Title a hyperlink
-        [Parameter(Mandatory=$False)]
-        [String]
-        $TitleLink,
-
-        # Array that's a table thing (needs to be an array)
-        [Parameter(Mandatory=$False)]
-        $Fields,
-
-        # The main body of the attachment
-        [Parameter(Mandatory=$True)]
-        [string]$Text   
-    )
-    .\createAttachment.ps1 -Fallback $Fallback -Color $Color -Pretext $Pretext -Title $Title -TitleLink $TitleLink -Fields $Fields -Text $Text
-}
-
-function Create-Field {
-    param(
-        # Bold heading above the value text. It cannot contain markup
-        [Parameter(Mandatory=$True)]
-        [string]
-        $Title,
-    
-        # The text value of the field. It may contain standard message markup and must be escaped as normal. May be multi-line.
-        [Parameter(Mandatory=$True)]
-        [string]
-        $Value,
-    
-        # An optional flag indicating whether the value is short enough to be displayed side-by-side with other values.
-        [Parameter(Mandatory=$False)]
-        [bool]
-        $Short = $True
-    )
-    .\createFields.ps1 -Title $Title -Value $Value -Short $Short
-}
-
+. .\sendMsg.ps1
+. .\reactions.ps1
+. .\createStuff.ps1
 
 $RTMSession = Invoke-RestMethod -Uri https://slack.com/api/rtm.start -Body @{token=$Token}
 "I am $($RTMSession.self.name)"
@@ -130,14 +58,22 @@ Try{
 
                 switch ($RTM){
                     {($_.type -eq "message") -and (!$_.reply_to)}{
-                        if (($_.text.StartsWith("!")) -or ($_.text -match "<@$($RTMSession.self.id)>") -or $_.channel.StartsWith("D")) { 
+                        if (($_.channel -eq $oldChannel) -and ($_.ts -eq $oldTS)){
+                            "$(get-date) - I sent this - $($_.text)"
+                        }elseif (($_.text.StartsWith("!")) -or ($_.text -match "<@$($RTMSession.self.id)>") -or $_.channel.StartsWith("D") ) { 
                             "$(get-date) - Sent to me - $($_.text)"
                             #send hourglass_flowing_sand reaction
-                            
+                            #start-job -FilePath .\reactions.ps1 -ArgumentList 
+                            Do-Reaction -Action "Add" -Channel $rtm.channel -Timestamp $rtm.ts -Emoji "hourglass_flowing_sand"
                             $message = $_.text.Trim("!")
                             $response = .\respondToMessage.ps1 -Message $message -Channel $rtm.channel
-                            if ($response){
-                                Send-SlackMsg -Text $response.message -Channel $response.channel -Attachments $response.attachment
+                            if ($response -eq "Done"){
+                                Do-Reaction -Action "Remove" -Channel $rtm.channel -Timestamp $rtm.ts -Emoji "hourglass_flowing_sand"
+                                Do-Reaction -Action "Add" -Channel $rtm.channel -Timestamp $rtm.ts -Emoji "heavy_check_mark"
+                            }elseif ($response){
+                                $oldChannel, $oldTS = Send-SlackMsg -Text $response.message -Channel $response.channel -Attachments $response.attachment
+                                Do-Reaction -Action "Remove" -Channel $rtm.channel -Timestamp $rtm.ts -Emoji "hourglass_flowing_sand"
+                                Do-Reaction -Action "Add" -Channel $rtm.channel -Timestamp $rtm.ts -Emoji "heavy_check_mark"
                             }
                         }else{
                             "$(get-date) - Not sent to me - $_"

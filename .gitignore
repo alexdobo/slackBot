@@ -5,3 +5,6 @@ old/
 .vscode/
 licenses/
 evolveLicenseSlackBot.exe
+clarifyLicenseSlackBot.exe
+startSlackBot.bat
+.gitignore

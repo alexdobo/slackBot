@@ -1,4 +1,5 @@
-﻿$null = @(
+﻿
+$null = @(
     $url = get-content ".\variables\whosOnlineURL.txt"
 )
 $ipAddresses = Get-DhcpServerv4lease -ScopeId 192.168.69.0 | Where-Object {$_.AddressState -eq "Active"}
